@@ -1,6 +1,4 @@
-// components/lobby/hooks/useApi.js
-
-import { getApiUrl } from '../../../config';
+import { API_URL } from '../../../config';
 import { useLobby } from '../context';
 
 export function useApi() {
@@ -13,8 +11,7 @@ export function useApi() {
         setLoading(true);
       }
       
-      const apiUrl = getApiUrl();
-      if (!apiUrl) {
+      if (!API_URL) {
         throw new Error('API URL is not configured');
       }
 
@@ -24,9 +21,9 @@ export function useApi() {
         ...params
       }).toString();
 
-      console.log(`Calling API: ${apiUrl}?${queryString}`); // Debug log
+      console.log(`Calling API: ${API_URL}?${queryString}`); // Debug log
 
-      const response = await fetch(`${apiUrl}?${queryString}`, {
+      const response = await fetch(`${API_URL}?${queryString}`, {
         method: 'GET',
         headers: {
           'Accept': 'application/json',
