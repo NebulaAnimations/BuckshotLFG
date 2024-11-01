@@ -1,5 +1,5 @@
 // components/lobby/screens/LobbyScreen.jsx
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Copy, UserMinus, Terminal, Users, Mic, Globe2 } from 'lucide-react';
 import { useLobby } from '../context';
 import { Regions, LOBBY_REFRESH_INTERVAL } from '../utils/constants';
@@ -11,11 +11,19 @@ export function LobbyScreen() {
     currentLobby,
     playerName,
     codeCopied,
-    setCodeCopied 
+    setCodeCopied,
+    setScreen 
   } = useLobby();
 
   const { handleLeaveLobby, handleKickPlayer } = useLobbyActions();
   const { fetchLobbyDetails } = useLobbyRefresh();
+
+  // Add immediate refresh after kick
+  const handleKick = async (lobbyId, playerToKick) => {
+    await handleKickPlayer(lobbyId, playerToKick);
+    // Immediately fetch updated lobby details
+    await fetchLobbyDetails();
+  };
 
   const copyGameCode = () => {
     if (currentLobby?.game_code) {
@@ -24,6 +32,20 @@ export function LobbyScreen() {
       setTimeout(() => setCodeCopied(false), 2000);
     }
   };
+
+  // Add effect to handle forced refreshes
+  useEffect(() => {
+    if (!currentLobby) {
+      setScreen(Screen.MAIN);
+      return;
+    }
+
+    const refreshInterval = setInterval(() => {
+      fetchLobbyDetails();
+    }, LOBBY_REFRESH_INTERVAL);
+
+    return () => clearInterval(refreshInterval);
+  }, [currentLobby]);
 
   if (!currentLobby) return null;
 
@@ -76,7 +98,7 @@ export function LobbyScreen() {
               </div>
               {currentLobby.host === playerName && player !== playerName && (
                 <button
-                  onClick={() => handleKickPlayer(currentLobby.id, player)}
+                  onClick={() => handleKick(currentLobby.id, player)}
                   className="text-red-500 hover:text-red-300"
                   title="Kick player"
                 >
