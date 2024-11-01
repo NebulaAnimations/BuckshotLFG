@@ -5,3 +5,4 @@ export * from './Select.jsx';
 export * from './ErrorToast.jsx';
 export * from './LoadingOverlay.jsx';
 export * from './CountdownTimer.jsx';
+export * from './KickToast.jsx';
