@@ -1,0 +1,42 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-black text-green-500;
+  }
+
+  /* Custom scrollbar for the DOS theme */
+  ::-webkit-scrollbar {
+    @apply w-2;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-black;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-green-500 hover:bg-green-400;
+  }
+
+  /* Custom selection color */
+  ::selection {
+    @apply bg-green-500 text-black;
+  }
+
+  /* Focus styles */
+  :focus {
+    @apply outline-none ring-1 ring-green-500;
+  }
+
+  /* Custom DOS-style font */
+  @font-face {
+    font-family: 'DOS';
+    src: url('/fonts/Perfect-DOS-VGA-437.woff2') format('woff2');
+  }
+
+  html {
+    font-family: 'DOS', monospace;
+  }
+}
