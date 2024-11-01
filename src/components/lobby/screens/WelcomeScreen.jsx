@@ -14,6 +14,8 @@ export function WelcomeScreen() {
     setScreen 
   } = useLobby();
 
+  console.log('WelcomeScreen rendering:', { playerName, region }); // Debug log
+
   const handleContinue = () => {
     if (playerName.trim()) {
       setScreen(Screen.MAIN);
@@ -29,7 +31,7 @@ export function WelcomeScreen() {
     <div className="border border-green-500 p-4">
       <h2 className="text-xl mb-6 flex items-center gap-2">
         <Terminal className="w-6 h-6" />
-        DOS Lobby System v1.0
+        Welcome
       </h2>
       
       <div className="space-y-4">

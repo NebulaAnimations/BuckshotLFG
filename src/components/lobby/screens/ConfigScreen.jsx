@@ -23,6 +23,13 @@ export function ConfigScreen() {
     }));
   };
 
+  const handleMaxPlayersChange = (e) => {
+    const value = e.target.value;
+    const numValue = parseInt(value) || MIN_PLAYERS_LIMIT;
+    const clampedValue = Math.min(MAX_PLAYERS_LIMIT, Math.max(MIN_PLAYERS_LIMIT, numValue));
+    handleConfigChange('maxPlayers', clampedValue);
+  };
+
   const voiceOptions = [
     { value: 'optional', label: 'Voice Chat Optional' },
     { value: 'required', label: 'Voice Chat Required' },
@@ -34,7 +41,7 @@ export function ConfigScreen() {
       <div className="mb-6 flex justify-between items-center">
         <h2 className="text-xl flex items-center gap-2">
           <Settings className="w-6 h-6" />
-          Lobby Configuration
+          Configure Lobby
         </h2>
       </div>
 
@@ -49,24 +56,25 @@ export function ConfigScreen() {
           value={lobbyConfig.gameCode}
           onChange={(e) => handleConfigChange('gameCode', e.target.value.toUpperCase())}
           placeholder="Enter game lobby code"
-          maxLength={10}
+          maxLength={50}
         />
 
-        <InputField
-          label={
-            <div className="flex items-center gap-2">
-              <Users className="w-4 h-4" />
-              Maximum Players:
-            </div>
-          }
-          type="number"
-          value={lobbyConfig.maxPlayers}
-          onChange={(e) => handleConfigChange('maxPlayers', 
-            Math.min(MAX_PLAYERS_LIMIT, Math.max(MIN_PLAYERS_LIMIT, parseInt(e.target.value) || MIN_PLAYERS_LIMIT))
-          )}
-          min={MIN_PLAYERS_LIMIT}
-          max={MAX_PLAYERS_LIMIT}
-        />
+        <div className={`${InputField({}).props.className}`}>
+          <label className="block mb-2 flex items-center gap-2">
+            <Users className="w-4 h-4" />
+            Maximum Players:
+          </label>
+          <input
+            type="number"
+            className="w-full bg-black border border-green-500 p-2 
+                     focus:outline-none focus:border-green-400
+                     [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+            value={lobbyConfig.maxPlayers}
+            onChange={handleMaxPlayersChange}
+            min={MIN_PLAYERS_LIMIT}
+            max={MAX_PLAYERS_LIMIT}
+          />
+        </div>
 
         <Select
           label={

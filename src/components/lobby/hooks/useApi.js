@@ -1,4 +1,5 @@
 // components/lobby/hooks/useApi.js
+
 import { API_URL } from '../utils/constants';
 import { useLobby } from '../context';
 
@@ -7,37 +8,68 @@ export function useApi() {
 
   const callApi = async (action, params = {}, options = { silent: false }) => {
     try {
-      setError('');
-      // Only set loading if not in silent mode
       if (!options.silent) {
+        setError('');
         setLoading(true);
       }
       
+      if (!API_URL) {
+        throw new Error('API URL is not configured');
+      }
+
+      // Build query string
       const queryString = new URLSearchParams({
         action,
         ...params
       }).toString();
 
-      const response = await fetch(`${API_URL}?${queryString}`);
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const text = await response.text();
-      try {
-        const data = JSON.parse(text);
-        if (data.error) {
-          throw new Error(data.error);
+      console.log(`Calling API: ${API_URL}?${queryString}`); // Debug log
+
+      const response = await fetch(`${API_URL}?${queryString}`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
         }
-        return data;
+      });
+
+      const text = await response.text();
+      console.log('Raw API response:', text); // Debug log
+
+      let data;
+      try {
+        data = JSON.parse(text);
       } catch (err) {
-        throw new Error(`Failed to parse response: ${text}`);
+        console.error('Failed to parse API response:', err);
+        throw new Error('Invalid API response format');
       }
+
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      // Ensure lobbies data is properly formatted
+      if (action === 'getLobbies') {
+        if (action === 'getLobbies' && !Array.isArray(data)) {
+          console.error('Invalid lobbies response:', data);
+          return [];
+        }
+        return data.map(lobby => ({
+          ...lobby,
+          max_players: Number(lobby.max_players) || 4,
+          created_at: Number(lobby.created_at),
+          last_active: Number(lobby.last_active),
+          players: Array.isArray(lobby.players) ? lobby.players : []
+        }));
+      }
+
+      return data;
     } catch (err) {
       console.error(`API Error (${action}):`, err);
+      if (!options.silent) {
+        setError(err.message);
+      }
       throw err;
     } finally {
-      // Only set loading false if not in silent mode
       if (!options.silent) {
         setLoading(false);
       }

@@ -1,6 +1,4 @@
 // components/lobby/components/InputField.jsx
-import React from 'react';
-
 export function InputField({ 
   label, 
   value, 
@@ -11,7 +9,7 @@ export function InputField({
   ...props 
 }) {
   return (
-    <div className={className}>
+    <div className={`${className}`}>
       {label && (
         <label className="block mb-2">
           {label}
@@ -22,7 +20,7 @@ export function InputField({
         className={`w-full bg-black border border-green-500 p-2 
                    focus:outline-none focus:border-green-400
                    ${error ? 'border-red-500' : ''}`}
-        value={value}
+        value={value || ''}
         onChange={onChange}
         {...props}
       />

@@ -2,9 +2,9 @@
 import React from 'react';
 import { Copy, UserMinus, Terminal, Users, Mic, Globe2 } from 'lucide-react';
 import { useLobby } from '../context';
-import { Regions } from '../utils/constants';
-import { Button } from '../components';
-import { useLobbyActions } from '../hooks/useLobbyActions';
+import { Regions, LOBBY_REFRESH_INTERVAL } from '../utils/constants';
+import { Button, CountdownTimer } from '../components';
+import { useLobbyActions, useLobbyRefresh } from '../hooks';
 
 export function LobbyScreen() {
   const { 
@@ -15,6 +15,7 @@ export function LobbyScreen() {
   } = useLobby();
 
   const { handleLeaveLobby, handleKickPlayer } = useLobbyActions();
+  const { fetchLobbyDetails } = useLobbyRefresh();
 
   const copyGameCode = () => {
     if (currentLobby?.game_code) {
@@ -33,8 +34,12 @@ export function LobbyScreen() {
           <Terminal className="w-6 h-6" />
           Lobby #{currentLobby.id}
         </h2>
-        <div className="text-sm">
-          Host: {currentLobby.host}
+        <div className="flex flex-col items-end gap-1">
+          <div className="text-sm">Host: {currentLobby.host}</div>
+          <CountdownTimer 
+            interval={LOBBY_REFRESH_INTERVAL} 
+            onTick={fetchLobbyDetails}
+          />
         </div>
       </div>
 

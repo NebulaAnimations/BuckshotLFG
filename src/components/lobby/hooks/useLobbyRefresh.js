@@ -1,4 +1,3 @@
-// components/lobby/hooks/useLobbyRefresh.js
 import { useEffect } from 'react';
 import { useInterval } from 'react-use';
 import { useLobby } from '../context';
@@ -19,35 +18,82 @@ export function useLobbyRefresh() {
 
   const fetchLobbies = async () => {
     try {
-      // Use silent loading for background refreshes
       const data = await callApi('getLobbies', {}, { silent: true });
-      setLobbies(Array.isArray(data) ? data : []);
+      console.log('Raw lobbies data:', data); // Debug log
+      
+      if (!Array.isArray(data)) {
+        console.error('Invalid lobbies data format:', data);
+        setLobbies([]);
+        return;
+      }
+
+      // Process each lobby
+      const processedLobbies = data.map(lobby => ({
+        id: lobby.id,
+        host: lobby.host,
+        region: lobby.region,
+        voice_requirement: lobby.voice_requirement || 'optional',
+        discord_link: lobby.discord_link || '',
+        created_at: Number(lobby.created_at) || Date.now(),
+        last_active: Number(lobby.last_active) || Date.now(),
+        game_code: lobby.game_code,
+        max_players: Number(lobby.max_players) || 4,
+        players: Array.isArray(lobby.players) ? lobby.players : []
+      }));
+
+      console.log('Processed lobbies:', processedLobbies); // Debug log
+      setLobbies(processedLobbies);
     } catch (err) {
       console.error('Failed to fetch lobbies:', err);
-      setError('Failed to fetch lobbies. Please try again.');
+      if (!err.message?.includes('API URL')) {
+        setError('Failed to fetch lobbies. Please try again.');
+      }
     }
   };
 
   const fetchLobbyDetails = async () => {
+    if (!currentLobby?.id) return;
+    
     try {
-      if (!currentLobby?.id) return;
-      
-      // Use silent loading for background refreshes
       const data = await callApi('getLobby', { id: currentLobby.id }, { silent: true });
-      if (!data.id) {
+      if (!data?.id) {
         setScreen(Screen.MAIN);
         setCurrentLobby(null);
         setError('Lobby no longer exists');
-      } else {
-        setCurrentLobby(data);
+        return;
       }
+
+      const processedLobby = {
+        id: data.id,
+        host: data.host,
+        region: data.region,
+        voice_requirement: data.voice_requirement || 'optional',
+        discord_link: data.discord_link || '',
+        created_at: Number(data.created_at) || Date.now(),
+        last_active: Number(data.last_active) || Date.now(),
+        game_code: data.game_code,
+        max_players: Number(data.max_players) || 4,
+        players: Array.isArray(data.players) ? data.players : []
+      };
+
+      setCurrentLobby(processedLobby);
     } catch (err) {
       console.error('Failed to fetch lobby details:', err);
-      setScreen(Screen.MAIN);
-      setCurrentLobby(null);
-      setError('Failed to fetch lobby details. Returning to main menu.');
+      if (!err.message?.includes('API URL')) {
+        setError('Failed to fetch lobby details. Returning to main menu.');
+        setScreen(Screen.MAIN);
+        setCurrentLobby(null);
+      }
     }
   };
+
+  // Initial load
+  useEffect(() => {
+    if (screen === Screen.MAIN) {
+      console.log('Initial lobbies fetch'); // Debug log
+      fetchLobbies();
+    }
+  }, [screen]);
 
   // Periodic refreshes
   useInterval(() => {
@@ -62,15 +108,5 @@ export function useLobbyRefresh() {
     }
   }, LOBBY_REFRESH_INTERVAL);
 
-  // Initial lobbies fetch
-  useEffect(() => {
-    if (screen === Screen.MAIN) {
-      fetchLobbies();
-    }
-  }, [screen]);
-
-  return {
-    fetchLobbies,
-    fetchLobbyDetails
-  };
+  return { fetchLobbies, fetchLobbyDetails };
 }

@@ -1,10 +1,12 @@
 // components/lobby/context/LobbyContext.jsx
+
 import React, { createContext, useContext, useState } from 'react';
-import { Screen } from '../utils/constants';
+import { Screen, Regions } from '../utils/constants';
 
 const LobbyContext = createContext(null);
 
 export function LobbyProvider({ children }) {
+  // Initialize with WELCOME screen
   const [screen, setScreen] = useState(Screen.WELCOME);
   const [playerName, setPlayerName] = useState('');
   const [region, setRegion] = useState('NA');
@@ -19,6 +21,16 @@ export function LobbyProvider({ children }) {
     maxPlayers: 4,
     voiceRequirement: 'optional',
     discordLink: ''
+  });
+
+  // Debug log
+  console.log('LobbyContext state:', {
+    screen,
+    playerName,
+    region,
+    error,
+    loading,
+    lobbiesCount: lobbies.length
   });
 
   const value = {

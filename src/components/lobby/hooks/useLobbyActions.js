@@ -83,10 +83,20 @@ export function useLobbyActions() {
         region,
         voice_requirement: lobbyConfig.voiceRequirement
       });
-      setCurrentLobby(data);
-      setScreen(Screen.LOBBY);
+      
+      // Check if a lobby was found
+      if (data && data.id) {
+        setCurrentLobby(data);
+        setScreen(Screen.LOBBY);
+      } else {
+        // No lobby found, return to main screen with message
+        setError('No suitable lobbies found for quick match. Try creating a new lobby!');
+        setScreen(Screen.MAIN);
+        setCurrentLobby(null);
+      }
     } catch (err) {
       setError(err.message);
+      setScreen(Screen.MAIN);
     }
   };
 

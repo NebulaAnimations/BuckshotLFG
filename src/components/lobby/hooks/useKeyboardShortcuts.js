@@ -1,61 +1,77 @@
-// components/lobby/hooks/useKeyboardShortcuts.js
 import { useEffect } from 'react';
-import { useLobby } from '../context';
 import { Screen } from '../utils/constants';
-import { useLobbyActions } from './useLobbyActions';
 
-export function useKeyboardShortcuts() {
-  const { 
-    screen, 
-    setScreen, 
-    playerName, 
-    loading,
-    lobbyConfig,
-    currentLobby 
-  } = useLobby();
-
-  const { 
-    handleCreateLobby, 
-    handleLeaveLobby,
-    handleQuickMatch 
-  } = useLobbyActions();
-
+export const useKeyboardShortcuts = (
+  screen,
+  handlers = {},
+  options = { disabled: false }
+) => {
   useEffect(() => {
-    const handleKeyPress = (e) => {
-      if (loading) return;
+    if (options.disabled) return;
 
+    const handleKeyPress = (e) => {
+      // Don't handle shortcuts if we're in an input
+      if (e.target.tagName === 'INPUT') return;
+
+      // Global shortcuts that work on any screen
+      switch (e.key.toLowerCase()) {
+        case 'escape':
+          handlers.onEscape?.(e);
+          e.preventDefault();
+          break;
+        case 'f1':
+          handlers.onHelp?.(e);
+          e.preventDefault();
+          break;
+        case 'f5':
+          handlers.onRefresh?.(e);
+          e.preventDefault();
+          break;
+      }
+
+      // Screen-specific shortcuts
       switch (screen) {
         case Screen.WELCOME:
-          if (e.key === 'Enter' && playerName.trim()) {
-            setScreen(Screen.MAIN);
+          if (e.key === 'Enter') {
+            handlers.onEnterWelcome?.(e);
             e.preventDefault();
           }
           break;
 
         case Screen.MAIN:
-          if (e.key.toLowerCase() === 'h') {
-            setScreen(Screen.CONFIG);
-            e.preventDefault();
-          } else if (e.key.toLowerCase() === 'q') {
-            handleQuickMatch();
-            e.preventDefault();
+          switch (e.key.toLowerCase()) {
+            case 'h':
+              handlers.onHost?.(e);
+              e.preventDefault();
+              break;
+            case 'q':
+              handlers.onQuickMatch?.(e);
+              e.preventDefault();
+              break;
+            case 'r':
+              handlers.onRefresh?.(e);
+              e.preventDefault();
+              break;
           }
           break;
 
         case Screen.CONFIG:
-          if (e.key === 'Escape') {
-            setScreen(Screen.MAIN);
-            e.preventDefault();
-          } else if (e.key === 'Enter' && lobbyConfig.gameCode.trim()) {
-            handleCreateLobby();
+          if (e.key === 'Enter') {
+            handlers.onCreateLobby?.(e);
             e.preventDefault();
           }
           break;
 
         case Screen.LOBBY:
-          if (e.key === 'Escape' && currentLobby) {
-            handleLeaveLobby(currentLobby.id);
-            e.preventDefault();
+          switch (e.key.toLowerCase()) {
+            case 'c':
+              handlers.onCopyCode?.(e);
+              e.preventDefault();
+              break;
+            case 'l':
+              handlers.onLeaveLobby?.(e);
+              e.preventDefault();
+              break;
           }
           break;
       }
@@ -63,5 +79,5 @@ export function useKeyboardShortcuts() {
 
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [screen, playerName, lobbyConfig, loading, currentLobby]);
-}
+  }, [screen, handlers, options.disabled]);
+};
