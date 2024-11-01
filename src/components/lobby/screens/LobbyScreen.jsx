@@ -2,7 +2,7 @@
 import React, { useEffect } from 'react';
 import { Copy, UserMinus, Terminal, Users, Mic, Globe2 } from 'lucide-react';
 import { useLobby } from '../context';
-import { Regions, LOBBY_REFRESH_INTERVAL } from '../utils/constants';
+import { Screen, Regions, LOBBY_REFRESH_INTERVAL } from '../utils/constants';
 import { Button, CountdownTimer } from '../components';
 import { useLobbyActions, useLobbyRefresh } from '../hooks';
 
@@ -12,7 +12,8 @@ export function LobbyScreen() {
     playerName,
     codeCopied,
     setCodeCopied,
-    setScreen 
+    setScreen,
+    setError
   } = useLobby();
 
   const { handleLeaveLobby, handleKickPlayer } = useLobbyActions();
@@ -20,9 +21,19 @@ export function LobbyScreen() {
 
   // Add immediate refresh after kick
   const handleKick = async (lobbyId, playerToKick) => {
-    await handleKickPlayer(lobbyId, playerToKick);
-    // Immediately fetch updated lobby details
-    await fetchLobbyDetails();
+    try {
+      await handleKickPlayer(lobbyId, playerToKick);
+      
+      // Show temporary kick confirmation message
+      setError(`${playerToKick} has been kicked from the lobby`);
+      setTimeout(() => setError(''), 3000);
+      
+      // Immediately fetch updated lobby details
+      await fetchLobbyDetails();
+    } catch (err) {
+      console.error('Error kicking player:', err);
+      setError(err.message);
+    }
   };
 
   const copyGameCode = () => {
@@ -33,21 +44,32 @@ export function LobbyScreen() {
     }
   };
 
-  // Add effect to handle forced refreshes
+  // Add effect to handle lobby updates
   useEffect(() => {
-    if (!currentLobby) {
-      setScreen(Screen.MAIN);
-      return;
-    }
-
     const refreshInterval = setInterval(() => {
-      fetchLobbyDetails();
+      if (currentLobby?.id) {
+        fetchLobbyDetails();
+      }
     }, LOBBY_REFRESH_INTERVAL);
 
     return () => clearInterval(refreshInterval);
-  }, [currentLobby]);
+  }, [currentLobby?.id]);
 
-  if (!currentLobby) return null;
+  // Redirect if no lobby data
+  useEffect(() => {
+    if (!currentLobby && setScreen) {
+      setScreen(Screen.MAIN);
+    }
+  }, [currentLobby, setScreen]);
+
+  // Early return with loading state if no lobby data
+  if (!currentLobby) {
+    return (
+      <div className="border border-green-500 p-4 text-center">
+        <div className="animate-pulse">Loading lobby data...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="border border-green-500 p-4">
@@ -88,7 +110,7 @@ export function LobbyScreen() {
             Players ({currentLobby.players.length}/{currentLobby.max_players || 4}):
           </div>
           {currentLobby.players.map((player, index) => (
-            <div key={player} className="flex items-center justify-between py-1">
+            <div key={`${player}-${index}`} className="flex items-center justify-between py-1">
               <div className="flex items-center">
                 <span className="w-8">{index + 1}.</span>
                 <span>{player}</span>
