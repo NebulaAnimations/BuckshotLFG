@@ -5,7 +5,7 @@ import { WelcomeScreen } from './lobby/screens/WelcomeScreen';
 import { MainScreen } from './lobby/screens/MainScreen';
 import { ConfigScreen } from './lobby/screens/ConfigScreen';
 import { LobbyScreen } from './lobby/screens/LobbyScreen';
-import { ErrorToast, LoadingOverlay } from './lobby/components';
+import { ErrorToast, LoadingOverlay, KickToast } from './lobby/components';
 import { useKeyboardShortcuts } from './lobby/hooks';
 import { useLobby } from './lobby/context';
 import DOSEffects from './lobby/components/DOSEffects';
@@ -153,7 +153,8 @@ function LobbySystemContent() {
     loading,
     region,
     setScreen,
-    playerName
+    playerName,
+    kickMessage
   } = useLobby();
 
   const [isBooting, setIsBooting] = useState(true);
@@ -178,6 +179,13 @@ function LobbySystemContent() {
   useEffect(() => {
     setShowCommandLine(screen !== Screen.WELCOME);
   }, [screen]);
+
+  // Handle kicks by hiding command line
+  useEffect(() => {
+    if (kickMessage) {
+      setShowCommandLine(false);
+    }
+  }, [kickMessage]);
 
   const handleCommand = (command) => {
     const cmd = command.toLowerCase().trim();
@@ -221,6 +229,7 @@ function LobbySystemContent() {
 
       <div className="max-w-2xl mx-auto pb-16">
         <ErrorToast error={error} />
+        <KickToast message={kickMessage} />
         <LoadingOverlay loading={loading} />
 
         {/* Main Content Area */}

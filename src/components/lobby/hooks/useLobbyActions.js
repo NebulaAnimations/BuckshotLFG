@@ -10,7 +10,8 @@ export function useLobbyActions() {
     lobbyConfig,
     setCurrentLobby,
     setScreen,
-    setError
+    setError,
+    setKickMessage // Add this
   } = useLobby();
   
   const { callApi } = useApi();
@@ -70,7 +71,13 @@ export function useLobbyActions() {
         player_name: playerToKick,
         host_name: playerName
       });
+      
+      // Update the lobby data with the new player list
       setCurrentLobby(data);
+      
+      // Show a toast to the host confirming the kick
+      setError(`${playerToKick} has been kicked from the lobby`);
+      setTimeout(() => setError(''), 3000); // Clear after 3 seconds
     } catch (err) {
       setError(err.message);
     }
@@ -83,20 +90,10 @@ export function useLobbyActions() {
         region,
         voice_requirement: lobbyConfig.voiceRequirement
       });
-      
-      // Check if a lobby was found
-      if (data && data.id) {
-        setCurrentLobby(data);
-        setScreen(Screen.LOBBY);
-      } else {
-        // No lobby found, return to main screen with message
-        setError('No suitable lobbies found for quick match. Try creating a new lobby!');
-        setScreen(Screen.MAIN);
-        setCurrentLobby(null);
-      }
+      setCurrentLobby(data);
+      setScreen(Screen.MAIN);
     } catch (err) {
       setError(err.message);
-      setScreen(Screen.MAIN);
     }
   };
 

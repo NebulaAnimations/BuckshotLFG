@@ -1,3 +1,4 @@
+// components/lobby/hooks/useLobbyRefresh.js
 import { useEffect } from 'react';
 import { useInterval } from 'react-use';
 import { useLobby } from '../context';
@@ -11,7 +12,9 @@ export function useLobbyRefresh() {
     currentLobby,
     setCurrentLobby,
     setScreen,
-    setError
+    setError,
+    playerName,
+    setKickMessage
   } = useLobby();
   
   const { callApi } = useApi();
@@ -19,7 +22,7 @@ export function useLobbyRefresh() {
   const fetchLobbies = async () => {
     try {
       const data = await callApi('getLobbies', {}, { silent: true });
-      console.log('Raw lobbies data:', data); // Debug log
+      console.log('Raw lobbies data:', data);
       
       if (!Array.isArray(data)) {
         console.error('Invalid lobbies data format:', data);
@@ -41,7 +44,7 @@ export function useLobbyRefresh() {
         players: Array.isArray(lobby.players) ? lobby.players : []
       }));
 
-      console.log('Processed lobbies:', processedLobbies); // Debug log
+      console.log('Processed lobbies:', processedLobbies);
       setLobbies(processedLobbies);
     } catch (err) {
       console.error('Failed to fetch lobbies:', err);
@@ -56,10 +59,20 @@ export function useLobbyRefresh() {
     
     try {
       const data = await callApi('getLobby', { id: currentLobby.id }, { silent: true });
+      
+      // Check if lobby exists
       if (!data?.id) {
         setScreen(Screen.MAIN);
         setCurrentLobby(null);
         setError('Lobby no longer exists');
+        return;
+      }
+
+      // Check if player has been kicked
+      if (!data.players.includes(playerName)) {
+        setScreen(Screen.MAIN);
+        setCurrentLobby(null);
+        setKickMessage('You have been kicked from the lobby');
         return;
       }
 
@@ -90,7 +103,7 @@ export function useLobbyRefresh() {
   // Initial load
   useEffect(() => {
     if (screen === Screen.MAIN) {
-      console.log('Initial lobbies fetch'); // Debug log
+      console.log('Initial lobbies fetch');
       fetchLobbies();
     }
   }, [screen]);
