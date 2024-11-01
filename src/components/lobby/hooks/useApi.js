@@ -1,6 +1,6 @@
 // components/lobby/hooks/useApi.js
 
-import { API_URL } from '../utils/constants';
+import { getApiUrl } from '../../../config';
 import { useLobby } from '../context';
 
 export function useApi() {
@@ -13,7 +13,8 @@ export function useApi() {
         setLoading(true);
       }
       
-      if (!API_URL) {
+      const apiUrl = getApiUrl();
+      if (!apiUrl) {
         throw new Error('API URL is not configured');
       }
 
@@ -23,14 +24,19 @@ export function useApi() {
         ...params
       }).toString();
 
-      console.log(`Calling API: ${API_URL}?${queryString}`); // Debug log
+      console.log(`Calling API: ${apiUrl}?${queryString}`); // Debug log
 
-      const response = await fetch(`${API_URL}?${queryString}`, {
+      const response = await fetch(`${apiUrl}?${queryString}`, {
         method: 'GET',
         headers: {
           'Accept': 'application/json',
-        }
+        },
+        mode: 'cors' // Enable CORS
       });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
       const text = await response.text();
       console.log('Raw API response:', text); // Debug log
@@ -49,7 +55,7 @@ export function useApi() {
 
       // Ensure lobbies data is properly formatted
       if (action === 'getLobbies') {
-        if (action === 'getLobbies' && !Array.isArray(data)) {
+        if (!Array.isArray(data)) {
           console.error('Invalid lobbies response:', data);
           return [];
         }
